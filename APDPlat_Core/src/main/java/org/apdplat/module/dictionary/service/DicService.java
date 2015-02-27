@@ -29,11 +29,12 @@ import org.apdplat.platform.log.APDPlatLogger;
 import org.apdplat.platform.service.ServiceFacade;
 import java.util.List;
 import javax.annotation.Resource;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DicService {
-    protected static final APDPlatLogger log = new APDPlatLogger(DicService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(DicService.class);
     @Resource(name="serviceFacade")
     private ServiceFacade serviceFacade;
     
@@ -47,7 +48,7 @@ public class DicService {
         if(dics!=null && dics.size()==1){
             return dics.get(0);
         }
-        log.error("有多个根词典!");
+        LOG.error("有多个根词典!");
         return null;
     }
 
@@ -72,7 +73,7 @@ public class DicService {
 
         List<Dic> page=serviceFacade.query(Dic.class, null, propertyCriteria).getModels();
         if(page.isEmpty()){
-            log.error("没有找到ID等于"+id+"的字典");
+            LOG.error("没有找到ID等于"+id+"的字典");
             return null;
         }
         return page.get(0);

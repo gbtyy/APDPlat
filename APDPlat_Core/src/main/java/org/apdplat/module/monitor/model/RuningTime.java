@@ -24,12 +24,13 @@ import org.apdplat.platform.generator.ActionGenerator;
 import org.apdplat.platform.annotation.IgnoreBusinessLog;
 import org.apdplat.platform.annotation.IgnoreUser;
 import org.apdplat.platform.annotation.ModelAttr;
-import org.apdplat.platform.model.Model;
 import org.apdplat.platform.util.ConvertUtils;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.Model;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableProperty;
 import org.springframework.context.annotation.Scope;
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Component;
 @Searchable
 @IgnoreBusinessLog
 @IgnoreUser
+@Database("log")
 public class RuningTime extends Model {
     public String getRuningTimeStr(){
         return ConvertUtils.getTimeDes(runingTime);

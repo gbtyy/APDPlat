@@ -25,13 +25,14 @@ import org.apdplat.platform.util.FileUtils;
 import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *IP地址访问限制
  * @author 杨尚川
  */
 public class IPAccessControler {
-    protected static final APDPlatLogger log = new APDPlatLogger(IPAccessControler.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(IPAccessControler.class);
     
     private Collection<String> allow;
     private Collection<String> deny;
@@ -51,17 +52,17 @@ public class IPAccessControler {
         try{
             String ip = getIpAddr(request);
             if(ip==null){
-                log.info("无法获取到访问者的IP");
+                LOG.info("无法获取到访问者的IP");
                 return true;
             }
 
             if (hasMatch(ip, deny)) {
-                log.info("ip: "+ip+" 位于黑名单中");
+                LOG.info("ip: "+ip+" 位于黑名单中");
                 return true;
             }
 
             if (!allow.isEmpty() && !hasMatch(ip, allow)) {
-                log.info("ip: "+ip+" 没有位于白名单中");
+                LOG.info("ip: "+ip+" 没有位于白名单中");
                 return true;
             }
         }catch(Exception e){}

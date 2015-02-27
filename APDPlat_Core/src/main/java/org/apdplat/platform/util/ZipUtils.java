@@ -32,13 +32,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *将文件或是文件夹打包压缩成zip格式
  * @author 杨尚川
  */
 public class ZipUtils {
-    protected static final APDPlatLogger log = new APDPlatLogger(ZipUtils.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(ZipUtils.class);
         
     private ZipUtils(){};
     
@@ -68,18 +69,18 @@ public class ZipUtils {
                 //去掉subDir
                 name=name.replace(subDir,"").trim();
                 if(name.length()<2){
-                    log.debug(name+" 长度 < 2");
+                    LOG.debug(name+" 长度 < 2");
                     continue;
                 }
                 if(entry.isDirectory()){
                     File dir=new File(base,name);
                     if(!dir.exists()){
                         dir.mkdirs();
-                        log.debug("创建目录");
+                        LOG.debug("创建目录");
                     }else{
-                        log.debug("目录已经存在");
+                        LOG.debug("目录已经存在");
                     }
-                    log.debug(name+" 是目录");
+                    LOG.debug(name+" 是目录");
                 }else{
                     File file=new File(base,name);
                     if(file.exists() && force){
@@ -88,17 +89,17 @@ public class ZipUtils {
                     if(!file.exists()){
                         InputStream in=zip.getInputStream(entry);
                         FileUtils.copyFile(in,file);
-                        log.debug("创建文件");
+                        LOG.debug("创建文件");
                     }else{
-                        log.debug("文件已经存在");
+                        LOG.debug("文件已经存在");
                     }
-                    log.debug(name+" 不是目录");
+                    LOG.debug(name+" 不是目录");
                 }
             }
         } catch (ZipException ex) {
-            log.error("文件解压失败",ex);
+            LOG.error("文件解压失败",ex);
         } catch (IOException ex) {
-            log.error("文件操作失败",ex);
+            LOG.error("文件操作失败",ex);
         }
     }
     
@@ -115,14 +116,14 @@ public class ZipUtils {
             zos = new ZipOutputStream(fos);
             writeZip(new File(sourcePath), "", zos);
         } catch (FileNotFoundException e) {
-            log.error("创建ZIP文件失败",e);
+            LOG.error("创建ZIP文件失败",e);
         } finally {
             try {
                 if (zos != null) {
                     zos.close();
                 }
             } catch (IOException e) {
-                log.error("创建ZIP文件失败",e);
+                LOG.error("创建ZIP文件失败",e);
             }
 
         }
@@ -151,16 +152,16 @@ public class ZipUtils {
                     
                 
                 } catch (FileNotFoundException e) {
-                    log.error("创建ZIP文件失败",e);
+                    LOG.error("创建ZIP文件失败",e);
                 } catch (IOException e) {
-                    log.error("创建ZIP文件失败",e);
+                    LOG.error("创建ZIP文件失败",e);
                 }finally{
                     try {
                         if(fis!=null){
                             fis.close();
                         }
                     }catch(IOException e){
-                        log.error("创建ZIP文件失败",e);
+                        LOG.error("创建ZIP文件失败",e);
                     }
                 }
             }

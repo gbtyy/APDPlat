@@ -28,9 +28,10 @@ package org.apdplat.platform.action.converter;
 import org.apdplat.platform.log.APDPlatLogger;
 import java.util.Map;
 import org.apache.struts2.util.StrutsTypeConverter;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 public class IntegerTypeConverter extends StrutsTypeConverter{
-    protected static final APDPlatLogger log = new APDPlatLogger(IntegerTypeConverter.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(IntegerTypeConverter.class);
 
     @Override
     public Object convertFromString(Map context, String[] values, Class toClass) {
@@ -40,7 +41,7 @@ public class IntegerTypeConverter extends StrutsTypeConverter{
         try{
             return Integer.parseInt(values[0].trim());
         }catch(Exception e){
-            log.info("字符串:"+values[0].trim()+"转换为数字失败");
+            LOG.info("字符串:"+values[0].trim()+"转换为数字失败");
         }
         return 0;
     }

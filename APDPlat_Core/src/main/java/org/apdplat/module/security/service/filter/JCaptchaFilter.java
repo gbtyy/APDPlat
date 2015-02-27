@@ -25,7 +25,6 @@ import org.apdplat.platform.log.APDPlatLogger;
 import org.apdplat.platform.util.ServletUtils;
 import org.apdplat.platform.util.SpringContextUtils;
 import com.octo.captcha.service.CaptchaService;
-import com.octo.captcha.service.CaptchaServiceException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -39,9 +38,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 public class JCaptchaFilter implements Filter {
-    protected static final APDPlatLogger log = new APDPlatLogger(JCaptchaFilter.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(JCaptchaFilter.class);
     
     public static final String PARAM_CAPTCHA_PARAMTER_NAME = "captchaParamterName";
     public static final String PARAM_FILTER_PROCESSES_URL = "filterProcessesUrl";
@@ -59,13 +59,13 @@ public class JCaptchaFilter implements Filter {
     }
 
     protected void initParameters(final FilterConfig fConfig) {
-        failureUrl = PropertyHolder.getProperty("login.page")+"?state=checkCodeError";
+        failureUrl = "/"+PropertyHolder.getProperty("login.page")+"?state=checkCodeError";
         if("true".equals(PropertyHolder.getProperty("login.code"))){
-            log.info("启用登录验证码机制");
+            LOG.info("启用登录验证码机制");
             filter=true;
         }else{
             filter=false;
-            log.info("禁用登录验证码机制");
+            LOG.info("禁用登录验证码机制");
         }
         if (StringUtils.isNotBlank(fConfig.getInitParameter(PARAM_FILTER_PROCESSES_URL))) {
             filterProcessesUrl = fConfig.getInitParameter(PARAM_FILTER_PROCESSES_URL);
@@ -119,13 +119,16 @@ public class JCaptchaFilter implements Filter {
             //String writerNames[] = ImageIO.getWriterFormatNames();
             ImageIO.write(challenge, "png", out);
             out.flush();
-        } catch (IOException | CaptchaServiceException e) {
-            log.error("生成验证码出错",e);
+        } catch (Exception e) {
+            //忽略异常org.apache.catalina.connector.ClientAbortException
+            if(!"org.apache.catalina.connector.ClientAbortException".equals(e.getClass().getName())){
+                LOG.error("生成验证码出错",e);
+            }
         } finally {
             try {
                 out.close();
             } catch (IOException e) {
-                log.error("生成验证码出错",e);
+                LOG.error("生成验证码出错",e);
             }
         }
     }

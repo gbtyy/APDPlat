@@ -24,10 +24,10 @@ import org.apdplat.platform.log.APDPlatLogger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -41,10 +41,12 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  * Provides GZIP compression of responses.
@@ -58,7 +60,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  */
 
 public class GzipFilter extends Filter {
-
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(GzipFilter.class);
     /**
      * Performs initialisation.
      */
@@ -84,8 +86,8 @@ public class GzipFilter extends Filter {
         try{
             if (!isIncluded(request) && acceptsEncoding(request, "gzip")) {
                 // Client accepts zipped content
-                if (log.isDebugEnabled()) {
-                    log.debug(request.getRequestURL() + ". Writing with gzip compression");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(request.getRequestURL() + ". Writing with gzip compression");
                 }
 
                 // Create a gzip stream
@@ -113,14 +115,14 @@ public class GzipFilter extends Filter {
                 response.getOutputStream().write(compressedBytes);
             } else {
                 // Client does not accept zipped content - don't bother zipping
-                if (log.isDebugEnabled()) {
-                    log.debug(request.getRequestURL()
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(request.getRequestURL()
                             + ". Writing without gzip compression because the request does not accept gzip.");
                 }
                 chain.doFilter(request, response);
             }
         }catch(Exception e){
-            log.info("增加zip压缩失败："+request.getRequestURI());
+            LOG.info("增加zip压缩失败："+request.getRequestURI());
         }
     }
 
@@ -134,8 +136,8 @@ public class GzipFilter extends Filter {
         final String uri = (String) request.getAttribute("javax.servlet.include.request_uri");
         final boolean includeRequest = !(uri == null);
 
-        if (includeRequest && log.isDebugEnabled()) {
-            log.debug(request.getRequestURL() + " resulted in an include request. This is unusable, because" +
+        if (includeRequest && LOG.isDebugEnabled()) {
+            LOG.debug(request.getRequestURL() + " resulted in an include request. This is unusable, because" +
                     "the response will be assembled into the overrall response. Not gzipping.");
         }
         return includeRequest;
@@ -173,7 +175,7 @@ class GenericResponseWrapper extends HttpServletResponseWrapper implements Seria
 
     private static final long serialVersionUID = -5976708169031065498L;
 
-    protected static final APDPlatLogger log = new APDPlatLogger(GenericResponseWrapper.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(GenericResponseWrapper.class);
     private int statusCode = SC_OK;
     private int contentLength;
     private String contentType;
@@ -256,7 +258,11 @@ class GenericResponseWrapper extends HttpServletResponseWrapper implements Seria
     @Override
     public PrintWriter getWriter() {
         if (writer == null) {
-            writer = new PrintWriter(outstr, true);
+            try {
+                writer = new PrintWriter(new OutputStreamWriter(outstr, "UTF-8"));
+            } catch (UnsupportedEncodingException ex) {
+                LOG.error("gzip构造PrintWriter失败："+ex);                
+            }
         }
         return writer;
     }
@@ -376,9 +382,19 @@ class FilterServletOutputStream extends ServletOutputStream {
     public void write(final byte[] b, final int off, final int len) throws IOException {
         stream.write(b, off, len);
     }
+
+    @Override
+    public boolean isReady() {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
+
+    @Override
+    public void setWriteListener(WriteListener wl) {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
 }
 class ResponseUtil {
-    protected static final APDPlatLogger log = new APDPlatLogger(ResponseUtil.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(ResponseUtil.class);
 
 
 
@@ -413,8 +429,8 @@ class ResponseUtil {
 
         //Check for 0 length body
         if (compressedBytes.length == EMPTY_GZIPPED_CONTENT_SIZE) {
-            if (log.isDebugEnabled()) {
-                log.debug(request.getRequestURL() + " resulted in an empty response.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request.getRequestURL() + " resulted in an empty response.");
             }
             return true;
         } else {
@@ -440,8 +456,8 @@ class ResponseUtil {
 
         //Check for NO_CONTENT
         if (responseStatus == HttpServletResponse.SC_NO_CONTENT) {
-            if (log.isDebugEnabled()) {
-                log.debug(request.getRequestURL() + " resulted in a " + HttpServletResponse.SC_NO_CONTENT
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request.getRequestURL() + " resulted in a " + HttpServletResponse.SC_NO_CONTENT
                         + " response. Removing message body in accordance with RFC2616.");
             }
             return true;
@@ -449,8 +465,8 @@ class ResponseUtil {
 
         //Check for NOT_MODIFIED
         if (responseStatus == HttpServletResponse.SC_NOT_MODIFIED) {
-            if (log.isDebugEnabled()) {
-                log.debug(request.getRequestURL() + " resulted in a " + HttpServletResponse.SC_NOT_MODIFIED
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request.getRequestURL() + " resulted in a " + HttpServletResponse.SC_NOT_MODIFIED
                         + " response. Removing message body in accordance with RFC2616.");
             }
             return true;
@@ -483,7 +499,7 @@ abstract class Filter implements javax.servlet.Filter {
      * If a request attribute NO_FILTER is set, then filtering will be skipped
      */
     public static final String NO_FILTER = "NO_FILTER";
-    protected static final APDPlatLogger log = new APDPlatLogger(Filter.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(Filter.class);
 
     /**
      * The filter configuration.
@@ -539,7 +555,7 @@ abstract class Filter implements javax.servlet.Filter {
             }
 
         } catch (final Throwable throwable) {
-            log.info("增加zip压缩失败："+httpRequest.getRequestURI());
+            LOG.info("增加zip压缩失败："+httpRequest.getRequestURI());
         }
     }
 
@@ -597,7 +613,7 @@ abstract class Filter implements javax.servlet.Filter {
             // Attempt to initialise this filter
             doInit();
         } catch (final Exception e) {
-            log.error("Could not initialise servlet filter.", e);
+            LOG.error("Could not initialise servlet filter.", e);
             throw new ServletException("Could not initialise servlet filter.", e);
         }
     }
@@ -607,8 +623,8 @@ abstract class Filter implements javax.servlet.Filter {
         String level = config.getInitParameter("exceptionsToLogDifferentlyLevel");
         String suppressStackTracesString = config.getInitParameter("suppressStackTraces");
         suppressStackTraces = Boolean.valueOf(suppressStackTracesString).booleanValue();
-        if (log.isDebugEnabled()) {
-            log.debug("Suppression of stack traces enabled for " + this.getClass().getName());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Suppression of stack traces enabled for " + this.getClass().getName());
         }
 
         if (exceptions != null) {
@@ -616,8 +632,8 @@ abstract class Filter implements javax.servlet.Filter {
             validateLevel(level);
             exceptionsToLogDifferentlyLevel = level;
             exceptionsToLogDifferently = exceptions;
-            if (log.isDebugEnabled()) {
-                log.debug("Different logging levels configured for " + this.getClass().getName());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Different logging levels configured for " + this.getClass().getName());
             }
         }
     }
@@ -683,7 +699,7 @@ abstract class Filter implements javax.servlet.Filter {
      * @param request
      */
     protected void logRequestHeaders(final HttpServletRequest request) {
-        if (log.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             Map headers = new HashMap();
             Enumeration enumeration = request.getHeaderNames();
             StringBuilder logLine = new StringBuilder();
@@ -694,7 +710,7 @@ abstract class Filter implements javax.servlet.Filter {
                 headers.put(name, headerValue);
                 logLine.append(": ").append(name).append(" -> ").append(headerValue);
             }
-            log.debug(logLine.toString());
+            LOG.debug(logLine.toString());
         }
     }
 

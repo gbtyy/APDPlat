@@ -38,6 +38,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import org.apache.commons.lang.StringUtils;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.compass.core.Compass;
 import org.compass.core.CompassHighlighter;
 import org.compass.core.CompassHits;
@@ -50,15 +51,18 @@ import org.compass.core.CompassTemplate;
  *
  */
 public abstract class DaoSupport extends DataPrivilegeControl{
-    protected final APDPlatLogger log = new APDPlatLogger(getClass());
+    protected final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(getClass());
     
     protected static final OrderCriteria defaultOrderCriteria = new OrderCriteria();
 
     static {
         defaultOrderCriteria.addOrder(new Order("id", Sequence.DESC));
     }
-    @PersistenceContext
-    protected EntityManager em;
+    
+    public DaoSupport(MultiDatabase multiDatabase){
+        super(multiDatabase);
+    }
+    
     @Resource(name="compassTemplate")
     protected CompassTemplate compassTemplate;
 
@@ -98,8 +102,8 @@ public abstract class DaoSupport extends DataPrivilegeControl{
         //根据属性过滤条件、排序条件构造jpql查询语句
         StringBuilder jpql = new StringBuilder("select o from ");
         jpql.append(getEntityName(modelClass)).append(" o ").append(buildPropertyCriteria(propertyCriteria)).append(buildOrderCriteria(sortCriteria));
-        log.debug("jpql:" + jpql);
-        Query query = em.createQuery(jpql.toString());
+        LOG.debug("jpql:" + jpql);
+        Query query = getEntityManager().createQuery(jpql.toString());
         //绑定属性过滤条件值
         bindingPropertyCriteria(query, propertyCriteria);
         //根据页面条件设置query参数
@@ -267,14 +271,14 @@ public abstract class DaoSupport extends DataPrivilegeControl{
      * @return
      */
     private Long getCount(Class<? extends Model> clazz, PropertyCriteria propertyCriteria) {
-        Query query = em.createQuery("select count(o.id) from " + getEntityName(clazz) + " o " + buildPropertyCriteria(propertyCriteria));
+        Query query = getEntityManager().createQuery("select count(o.id) from " + getEntityName(clazz) + " o " + buildPropertyCriteria(propertyCriteria));
         //绑定属性过滤条件值
         bindingPropertyCriteria(query, propertyCriteria);        
         setQueryCache(query);
         return (Long) query.getSingleResult();
     }
     public Long getCount(Class<? extends Model> clazz) {
-        Query query = em.createQuery("select count(o.id) from " + getEntityName(clazz) + " o ");
+        Query query = getEntityManager().createQuery("select count(o.id) from " + getEntityName(clazz) + " o ");
         return (Long) query.getSingleResult();
     }
 
@@ -283,8 +287,8 @@ public abstract class DaoSupport extends DataPrivilegeControl{
         Compass compass = compassTemplate.getCompass();
         CompassSession session=compass.openSession();
         CompassHits hits=  session.find(queryString);
-        log.info("命中:"+hits.getLength());
-        log.info("查询字符串:"+queryString);
+        LOG.info("命中:"+hits.getLength());
+        LOG.info("查询字符串:"+queryString);
         if(pageCriteria!=null){
             int start = (pageCriteria.getPage()-1) * pageCriteria.getSize();
             int end = (pageCriteria.getPage()-1) * pageCriteria.getSize() + pageCriteria.getSize();
@@ -333,9 +337,9 @@ public abstract class DaoSupport extends DataPrivilegeControl{
     private <T extends Model> T hightlight(Class<T> modelClass, CompassHits hits, int i) {
         T model = (T) hits.data(i);
         //在对模型进行高亮之前先从数据库加载模型
-        model = em.find(modelClass, model.getId());
+        model = getEntityManager().find(modelClass, model.getId());
         //防止高亮设置更新进入文档数据
-        em.detach(model);
+        getEntityManager().detach(model);
         CompassHighlighter highlighter = hits.highlighter(i);
         //高亮处理
         for (String searchProperty : model.getSearchProperties()) {
@@ -344,13 +348,13 @@ public abstract class DaoSupport extends DataPrivilegeControl{
                 if (StringUtils.isNotBlank(value)) {
                     try {
                         ReflectionUtils.setFieldValue(model, searchProperty, value);
-                        log.debug("给对象【" + model.getMetaData() +" : "+model.getId()+ "】的【" + searchProperty + "】属性添加高亮成功");
+                        LOG.debug("给对象【" + model.getMetaData() +" : "+model.getId()+ "】的【" + searchProperty + "】属性添加高亮成功");
                     } catch (Exception e) {
-                        log.debug("添加高亮，给对象【" + model.getMetaData() + "】设置属性【" + searchProperty + "】失败,值为:【" + value + "】");
+                        LOG.debug("添加高亮，给对象【" + model.getMetaData() + "】设置属性【" + searchProperty + "】失败,值为:【" + value + "】");
                     }
                 }
             } catch (Exception e) {
-                log.debug("处理" + searchProperty + "高亮抛出异常，忽略");
+                LOG.debug("处理" + searchProperty + "高亮抛出异常，忽略");
             }
         }
         return model;

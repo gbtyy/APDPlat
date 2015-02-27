@@ -41,12 +41,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import javax.annotation.Resource;
 import javax.persistence.MappedSuperclass;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.convention.annotation.Results;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
+import org.apdplat.platform.service.ServiceFacade;
 
 @MappedSuperclass
 @Results({
@@ -58,7 +62,7 @@ import org.apache.struts2.convention.annotation.Results;
     @Result(name = "detail", type = "freemarker", location = "/_namespace_/_action_/detail.ftl"),
     @Result(name = "form", type = "freemarker", location = "/_namespace_/_action_/form.ftl")})
 public abstract class ActionSupport extends DataPrivilegeControl{
-    protected final APDPlatLogger log = new APDPlatLogger(getClass());
+    protected final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(getClass());
     
     protected static final String LIST = "list";
     protected static final String FORM = "form";
@@ -83,17 +87,29 @@ public abstract class ActionSupport extends DataPrivilegeControl{
     static {
         defaultOrderCriteria.addOrder(new Order("id", Sequence.DESC));
     }
+    
+    @Resource(name = "serviceFacade")
+    private ServiceFacade service;
+    /**
+     * 子类可重载使用特定的数据库服务
+     * @return 
+     */
+    public ServiceFacade getService(){
+        return service;
+    }
+    
     public Locale getLocale() {
         ActionContext ctx = ActionContext.getContext();
         if (ctx != null) {
             return ctx.getLocale();
         } else {
-            log.debug("Action context not initialized");
+            LOG.debug("Action context not initialized");
             return null;
         }
     }
 
     public String execute() {
+        LOG.info("调用了action的默认execute方法");
         return null;
     }
 
@@ -184,7 +200,7 @@ public abstract class ActionSupport extends DataPrivilegeControl{
             //:号用来分割属性内部的类型、属性名、操作符、属性值
             String[] propInfo = prop.split(":");
             if(propInfo.length!=3){
-                log.error("属性过滤器错误："+prop);
+                LOG.error("属性过滤器错误："+prop);
                 continue;
             }
 
@@ -224,6 +240,9 @@ public abstract class ActionSupport extends DataPrivilegeControl{
     }
     protected HttpServletRequest getRequest() {
         return ServletActionContext.getRequest();
+    }
+    protected HttpSession getSession() {
+        return ServletActionContext.getRequest().getSession();
     }
 
     private Enumeration<?> getRequestParameterNames() {
@@ -287,7 +306,7 @@ public abstract class ActionSupport extends DataPrivilegeControl{
                 Class<?> fieldType = ReflectionUtils.getDeclaredField(model, fieldName).getType();
                 Object fieldValue;
                 if (fieldType != propertyEditor.getPropertyType().getValue()) {
-                    log.debug(fieldType + "!=" + propertyEditor.getPropertyType().getValue());
+                    LOG.debug(fieldType + "!=" + propertyEditor.getPropertyType().getValue());
                     fieldValue = propertyEditor.getProperty().getValue().toString();
                 } else {
                     fieldValue = propertyEditor.getProperty().getValue();

@@ -29,6 +29,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import org.apdplat.platform.annotation.Database;
+import org.compass.annotations.Index;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableProperty;
 import org.springframework.context.annotation.Scope;
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Component;
 @Searchable
 @IgnoreBusinessLog
 @IgnoreUser
+@Database("log")
 public class OperateLog extends Model {
     @ModelAttr("登录IP地址")
     protected String loginIP;
@@ -66,7 +69,19 @@ public class OperateLog extends Model {
     protected String operatingModel;
     @ModelAttr("操作ID")
     protected Integer operatingID;
+    
+    //用户名不分词
+    @SearchableProperty(index=Index.NOT_ANALYZED)
+    @ModelAttr("用户名")
+    protected String username;    
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public Integer getOperatingID() {
         return operatingID;

@@ -30,7 +30,6 @@ import org.apdplat.platform.annotation.RenderIgnore;
 import org.apdplat.platform.criteria.Property;
 import org.apdplat.platform.model.Model;
 import org.apdplat.platform.result.Page;
-import org.apdplat.platform.service.ServiceFacade;
 import org.apdplat.platform.util.ReflectionUtils;
 import org.apdplat.platform.util.SpringContextUtils;
 import org.apdplat.platform.util.Struts2Utils;
@@ -46,7 +45,10 @@ import javax.annotation.Resource;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.Temporal;
 import org.apache.commons.lang.StringUtils;
+import org.apdplat.platform.annotation.RenderDate;
+import org.apdplat.platform.annotation.RenderTime;
 
 /**
  *
@@ -56,8 +58,6 @@ import org.apache.commons.lang.StringUtils;
  */
 public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupport implements Action {
     private boolean search=false;
-    @Resource(name = "serviceFacade")
-    protected ServiceFacade service;
     protected T model = null;
     protected Class<T> modelClass;
     protected Page<T> page = new Page<>();
@@ -80,28 +80,37 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
                 modelClass=(Class<T>)model.getClass();
             }
         }catch(Exception e){
-            log.error("initModel fail");
+            LOG.error("initModel fail");
         }
+    }
+    
+    public String report(){
+        
+        return null;
     }
 
     public String chart(){
         if(StringUtils.isNotBlank(getQueryString())){
             //搜索出所有数据   
             beforeSearch();
-            page=service.search(getQueryString(), null, modelClass);
+            page=getService().search(getQueryString(), null, modelClass);
             List<T> models=processSearchResult(page.getModels());
             page.setModels(models);
         }else{
             beforeQuery();
-            this.setPage(service.query(modelClass));
+            this.setPage(getService().query(modelClass));
         }
         //生成报表XML数据
         String data=generateReportData(page.getModels());
         if(StringUtils.isBlank(data)){
-            log.info("生成的报表数据为空");
+            LOG.info("生成的报表数据为空");
             return null;
         }
         Struts2Utils.renderXml(data);
+        //业务处理完毕后删除页面数据引用，加速垃圾回收
+        this.getPage().getModels().clear();
+        this.setPage(null);
+        
         return null;
     }
 
@@ -114,7 +123,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
 
     @Override
     protected User refreshUser(User user){
-        return service.retrieve(User.class, user.getId());
+        return getService().retrieve(User.class, user.getId());
     }
     @Override
     public String create() {
@@ -130,10 +139,10 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
             }
             assemblyModelForCreate(model);
             objectReference(model);
-            service.create(model);
+            getService().create(model);
             afterSuccessCreateModel(model);
         }catch(Exception e){
-            log.error("创建模型失败",e);
+            LOG.error("创建模型失败",e);
             afterFailCreateModel(model);
 
             map=new HashMap();
@@ -155,7 +164,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
     }
     @Override
     public String retrieve() {
-        this.setModel(service.retrieve(modelClass, model.getId()));
+        this.setModel(getService().retrieve(modelClass, model.getId()));
         if(model==null){
             Struts2Utils.renderText("false");
             return null;
@@ -175,7 +184,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
     
     @Override
     public String updateForm() {
-        setModel(service.retrieve(modelClass, model.getId()));
+        setModel(getService().retrieve(modelClass, model.getId()));
         return null;
     }
 
@@ -186,17 +195,17 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
             //此时的model里面存的值是从浏览器传输过来的
             List<Property> properties=getPartProperties(model);
             //此时的model里面存的值是从数据库里面加载的
-            model=service.retrieve(modelClass,model.getId());
+            model=getService().retrieve(modelClass,model.getId());
             
             //数据版本控制，防止多个用户同时修改一条数据，造成更新丢失问题
             if(version==null){
-                log.info("前台界面没有传递版本信息");
+                LOG.info("前台界面没有传递版本信息");
                 throw new RuntimeException("您的数据没有版本信息");
             }else{
-                log.info("前台界面传递了版本信息,version="+version);
+                LOG.info("前台界面传递了版本信息,version="+version);
             }
             if(version!=model.getVersion()){
-                log.info("当前数据的版本为 "+model.getVersion()+",您的版本为 "+version);
+                LOG.info("当前数据的版本为 "+model.getVersion()+",您的版本为 "+version);
                 throw new RuntimeException("您的数据已过期，请重新修改");
             }
             
@@ -209,7 +218,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
                         String[] attr=property.getName().replace(".",",").split(",");
                         if(attr.length==2){
                             Field field=ReflectionUtils.getDeclaredField(model, attr[0]);
-                            T change=service.retrieve((Class<T>)field.getType(), (Integer)property.getValue());
+                            T change=getService().retrieve((Class<T>)field.getType(), (Integer)property.getValue());
                             ReflectionUtils.setFieldValue(model, attr[0], change);
                         }
                      }
@@ -221,10 +230,10 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
             now(model);
             //在更新前调用模板方法对模型进行处理
             assemblyModelForUpdate(model);
-            service.update(model);
+            getService().update(model);
             afterSuccessPartUpdateModel(model);
         }catch(Exception e){
-            log.error("更新模型失败",e);
+            LOG.error("更新模型失败",e);
             afterFailPartUpdateModel(model);
             map=new HashMap();
             map.put("success", false);
@@ -242,10 +251,10 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
     public String updateWhole() {
         try{
             assemblyModelForUpdate(model);
-            service.update(model);
+            getService().update(model);
             afterSuccessWholeUpdateModel(model);
         }catch(Exception e){
-            log.error("更新模型失败",e);
+            LOG.error("更新模型失败",e);
             afterFailWholeUpdateModel(model);
             Struts2Utils.renderText("false");
             return null;
@@ -263,10 +272,10 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
     public String delete() {
         try{
             prepareForDelete(getIds());
-            List<Integer> deletedIds=service.delete(modelClass, getIds());
+            List<Integer> deletedIds=getService().delete(modelClass, getIds());
             afterDelete(deletedIds);
         }catch(Exception e){
-            log.info("删除数据出错",e);
+            LOG.info("删除数据出错",e);
             Struts2Utils.renderText(e.getMessage());
             return null;
         }
@@ -283,40 +292,48 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
             search();
             return null;
         }
-        this.setPage(service.query(modelClass, getPageCriteria(), buildPropertyCriteria(), buildOrderCriteria()));
+        this.setPage(getService().query(modelClass, getPageCriteria(), buildPropertyCriteria(), buildOrderCriteria()));
         Map json = new HashMap();
         json.put("totalProperty", page.getTotalRecords());
         List<Map> result = new ArrayList<>();
         renderJsonForQuery(result);
         json.put("root", result);
         Struts2Utils.renderJson(json);
+        //业务处理完毕后删除页面数据引用，加速垃圾回收
+        this.getPage().getModels().clear();
+        this.setPage(null);
+        
         return null;
     }
 
     public String export() {
         if(search){
             //导出全部搜索结果
-            page=service.search(getQueryString(), null, modelClass);
+            page=getService().search(getQueryString(), null, modelClass);
             List<T> models=processSearchResult(page.getModels());
             page.setModels(models);
             //导出当前页的搜索结果
-            //this.setPage(service.search(getQueryString(), getPageCriteria(), modelClass));
+            //this.setPage(getService().search(getQueryString(), getPageCriteria(), modelClass));
         }else{
             //导出全部数据
-            this.setPage(service.query(modelClass, null, buildPropertyCriteria(), buildOrderCriteria()));
+            this.setPage(getService().query(modelClass, null, buildPropertyCriteria(), buildOrderCriteria()));
             //导出当前页的数据
-            //this.setPage(service.query(modelClass, getPageCriteria(), buildPropertyCriteria(), buildOrderCriteria()));
+            //this.setPage(getService().query(modelClass, getPageCriteria(), buildPropertyCriteria(), buildOrderCriteria()));
         }
         List<List<String>> result = new ArrayList<>();
         renderForExport(result);
         String path=excelService.write(result, exportFileName());
         Struts2Utils.renderText(path);
+        //业务处理完毕后删除页面数据引用，加速垃圾回收
+        this.getPage().getModels().clear();
+        this.setPage(null);
+        
         return null;
     }
     private List<T> processSearchResult(List<T> models){
         List<T> result =  new ArrayList<>();
         for(T obj : models){
-            T t=service.retrieve(modelClass, obj.getId());
+            T t=getService().retrieve(modelClass, obj.getId());
             if(t!=null){
                 result.add(t);
             }
@@ -326,7 +343,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
     @Override
     public String search() {
         beforeSearch();
-        page=service.search(getQueryString(), getPageCriteria(), modelClass);
+        page=getService().search(getQueryString(), getPageCriteria(), modelClass);
         //List<T> models=processSearchResult(page.getModels());
         //page.setModels(models);
 
@@ -515,7 +532,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
         String fieldName = field.getName();
         try{
             if(field.isAnnotationPresent(Lob.class)){
-                log.debug("字段["+fieldName+"]为大对象，忽略生成JSON字段");
+                LOG.debug("字段["+fieldName+"]为大对象，忽略生成JSON字段");
                 return;
             }
             Object value = ReflectionUtils.getFieldValue(obj, field);
@@ -530,7 +547,7 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
                 Collection col=(Collection)value;
                 String colStr="";
                 if(col!=null){
-                    log.debug("处理集合,字段为："+field.getName()+",大小为："+col.size());
+                    LOG.debug("处理集合,字段为："+field.getName()+",大小为："+col.size());
                     if(col.size()>0){
                         StringBuilder str=new StringBuilder();
                         for(Object m : col){
@@ -540,14 +557,14 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
                         colStr=str.toString();
                     }
                 }else{
-                    log.debug("处理集合失败，"+value+" 不能转换为集合");
+                    LOG.debug("处理集合失败，"+value+" 不能转换为集合");
                 }
                 data.put(fieldName, colStr);
                 return ;
             }
             //处理复杂对象类型
             if(field.isAnnotationPresent(ModelAttrRef.class)){
-                log.debug("处理对象,字段为："+field.getName());
+                LOG.debug("处理对象,字段为："+field.getName());
                 ModelAttrRef ref = field.getAnnotation(ModelAttrRef.class);
                 String fieldRef = ref.value();
                 //加入复杂对象的ID
@@ -568,15 +585,36 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
                 value="";
             }
             if("Timestamp".equals(valueClass) || "Date".equals(valueClass)){
-                value=DateTypeConverter.toDefaultDateTime((Date)value);
+                if(field.isAnnotationPresent(RenderDate.class)){
+                    value=DateTypeConverter.toDefaultDate((Date)value);
+                }else if(field.isAnnotationPresent(RenderTime.class)){
+                    value=DateTypeConverter.toDefaultDateTime((Date)value);
+                }else{
+                    //如果没有指定渲染类型，则根据@Temporal来判断
+                    String temporal = "TIMESTAMP";
+                    if(field.isAnnotationPresent(Temporal.class)){
+                        temporal = field.getAnnotation(Temporal.class).value().name();
+                    }
+                    switch (temporal) {
+                        case "TIMESTAMP":
+                            value=DateTypeConverter.toDefaultDateTime((Date)value);
+                            break;
+                        case "DATE":
+                            value=DateTypeConverter.toDefaultDate((Date)value);
+                            break;
+                    }
+                }
             }
             //处理下拉菜单
             if("DicItem".equals(valueClass)){
+                //当修改数据的时候，需要该值
+                data.put(fieldName+"Id", ReflectionUtils.getFieldValue(value, "id").toString());
+                
                 value = ReflectionUtils.getFieldValue(value, "name");
             }
             data.put(fieldName, value.toString());
         }catch(Exception e){
-            log.error("获取字段值失败",e);
+            LOG.error("获取字段值失败",e);
         }
     }
     public T getModel() {
@@ -607,15 +645,15 @@ public abstract class ExtJSSimpleAction<T extends Model> extends ExtJSActionSupp
         Field[] fields = model.getClass().getDeclaredFields();//获得对象方法集合
         for (Field field : fields) {// 遍历该数组
             if(field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)){
-                log.debug(model.getMetaData()+" 有ManyToOne 或 OneToOne映射，字段为"+field.getName());
+                LOG.debug(model.getMetaData()+" 有ManyToOne 或 OneToOne映射，字段为"+field.getName());
                 Model value=(Model)ReflectionUtils.getFieldValue(model, field);
                 if(value==null){
-                    log.debug(model.getMetaData()+" 的字段"+field.getName()+"没有值，忽略处理");
+                    LOG.debug(model.getMetaData()+" 的字段"+field.getName()+"没有值，忽略处理");
                     continue;
                 }
                 int id=value.getId();
-                log.debug("id: "+id);
-                value=service.retrieve(value.getClass(), id);
+                LOG.debug("id: "+id);
+                value=getService().retrieve(value.getClass(), id);
                 ReflectionUtils.setFieldValue(model, field, value);
             }
         }

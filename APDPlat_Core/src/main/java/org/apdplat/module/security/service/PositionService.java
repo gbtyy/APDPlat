@@ -31,6 +31,7 @@ import org.apdplat.platform.service.ServiceFacade;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Resource;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PositionService {
-    protected static final APDPlatLogger log = new APDPlatLogger(PositionService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(PositionService.class);
     @Resource(name="serviceFacade")
     private ServiceFacade serviceFacade;
 
@@ -75,7 +76,7 @@ public class PositionService {
     public String toRootJson(boolean recursion){
         Position rootPosition=getRootPosition();
         if(rootPosition==null){
-            log.error("获取根岗位失败！");
+            LOG.error("获取根岗位失败！");
             return "";
         }
         StringBuilder json=new StringBuilder();
@@ -104,7 +105,7 @@ public class PositionService {
     public String toJson(int positionId, boolean recursion){
         Position position=serviceFacade.retrieve(Position.class, positionId);
         if(position==null){
-            log.error("获取ID为 "+positionId+" 的岗位失败！");
+            LOG.error("获取ID为 "+positionId+" 的岗位失败！");
             return "";
         }
         List<Position> child=position.getChild();

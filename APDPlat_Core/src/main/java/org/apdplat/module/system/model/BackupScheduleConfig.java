@@ -21,8 +21,10 @@
 package org.apdplat.module.system.model;
 
 import org.apdplat.platform.annotation.IgnoreBusinessLog;
-import org.apdplat.platform.model.Model;
 import javax.persistence.Entity;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.annotation.ModelAttr;
+import org.apdplat.platform.model.SimpleModel;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +32,13 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @IgnoreBusinessLog
-public class BackupScheduleConfig extends Model{
+@Database
+public class BackupScheduleConfig extends SimpleModel{
+    @ModelAttr("定时备份的小时（0-23）")
     protected int scheduleHour=2;
+    @ModelAttr("定时备份的分钟（0-59）")
     protected int scheduleMinute=2;
+    @ModelAttr("是否启用定时备份")
     protected boolean enabled=true;
 
     public int getScheduleHour() {

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN"
-"http://struts.apache.org/dtds/struts-2.1.dtd">
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+"http://struts.apache.org/dtds/struts-2.3.dtd">
 
 <struts>
     <!-- 这是struts2唯一的一个配置文件 -->
     <!-- 约定优于配置 -->
 
     <!-- 打印详细错误信息  -->
-    <constant name="struts.devMode" value="true"/>
+    <constant name="struts.devMode" value="false"/>
     <!--设置浏览器不缓存静态内容 -->
     <constant name="struts.serve.static.browserCache" value="false" />
     <!--以上两项在开发时使用, 在生产环境下将以上两项分别改为false和true-->

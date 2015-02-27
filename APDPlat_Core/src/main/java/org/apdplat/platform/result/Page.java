@@ -32,12 +32,13 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 @XmlRootElement
 @XmlType(name = "Page")
 public class Page<T extends Model> implements Serializable {
     private static final long serialVersionUID = 1L;
-    protected static final APDPlatLogger log = new APDPlatLogger(Page.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(Page.class);
 
     private long totalRecords = 0;
     private List<T> models = new ArrayList<>();
@@ -47,7 +48,7 @@ public class Page<T extends Model> implements Serializable {
         try {
             return factory.unmarshal(in);
         } catch (Exception e) {
-            log.error("生成对象出错",e);
+            LOG.error("生成对象出错",e);
         }
         return null;
     }
@@ -58,7 +59,7 @@ public class Page<T extends Model> implements Serializable {
         try {
             xml = factory.marshal(this);
         } catch (Exception e) {
-            log.error("生成XML出错",e);
+            LOG.error("生成XML出错",e);
         }
         return xml;
     }

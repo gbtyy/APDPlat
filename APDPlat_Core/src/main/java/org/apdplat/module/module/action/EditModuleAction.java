@@ -26,6 +26,7 @@ import org.apdplat.platform.action.ExtJSSimpleAction;
 import org.apdplat.platform.util.Struts2Utils;
 import javax.annotation.Resource;
 import org.apache.struts2.convention.annotation.Namespace;
+import org.apdplat.module.module.service.ModuleCache;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 /**
@@ -62,13 +63,17 @@ public class EditModuleAction extends ExtJSSimpleAction<Module> {
                     String json=moduleService.toJsonForEdit(module);
                     Struts2Utils.renderJson(json);
                 }catch(Exception e){
-                    log.error("获取根模块出错",e);
+                    LOG.error("获取根模块出错",e);
                 }
             }
             
             return null;
         }
-
+        @Override
+        protected void afterSuccessPartUpdateModel(Module model) {
+            //手动清空缓存
+            ModuleCache.clear();
+        }
         public void setNode(String node) {
             this.node = node;
         }

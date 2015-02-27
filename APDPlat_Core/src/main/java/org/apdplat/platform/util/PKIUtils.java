@@ -40,12 +40,13 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 /**
  * 
  * @author 杨尚川
  */
 public class PKIUtils {
-    protected static final APDPlatLogger log = new APDPlatLogger(PKIUtils.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(PKIUtils.class);
        
     private PKIUtils(){}
     /**
@@ -68,7 +69,7 @@ public class PKIUtils {
             byte[] signed = signet.sign(); // 对信息的数字签名
             return signed;
         } catch (Exception ex) {
-            log.error("签名失败",ex);
+            LOG.error("签名失败",ex);
         }
         return null;
     }
@@ -89,7 +90,7 @@ public class PKIUtils {
             boolean result=signet.verify(signatureData);
             return result;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
-            log.error("验证签名失败",ex);
+            LOG.error("验证签名失败",ex);
         }
         return false;
     }
@@ -108,7 +109,7 @@ public class PKIUtils {
             PublicKey key = cert.getPublicKey();
             return key;
         } catch (CertificateException ex) {
-            log.error("获取证书公钥失败",ex);
+            LOG.error("获取证书公钥失败",ex);
         }
         return null;
     }
@@ -128,7 +129,7 @@ public class PKIUtils {
             byte encryptedData[] = cipher.doFinal(data);
             return encryptedData;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
-            log.error("加密数据失败",ex);
+            LOG.error("加密数据失败",ex);
         }
         return null;
     }
@@ -146,7 +147,7 @@ public class PKIUtils {
             byte encryptedData[] = encrypt(key,data);
             return encryptedData;
         } catch (Exception ex) {
-            log.error("用证书的公钥加密失败",ex);
+            LOG.error("用证书的公钥加密失败",ex);
         }
         return null;
     }
@@ -167,7 +168,7 @@ public class PKIUtils {
             byte encryptedData[] = encrypt(privateKey,data);
             return encryptedData;
         } catch (Exception ex) {
-            log.error("用证书的私钥加密失败",ex);
+            LOG.error("用证书的私钥加密失败",ex);
         }
         return null;
     }
@@ -189,7 +190,7 @@ public class PKIUtils {
             PrivateKey privateKey = (PrivateKey) ks.getKey(key, keyPassword.toCharArray());
             return privateKey;
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
-            log.error("获取证书私钥失败",ex);
+            LOG.error("获取证书私钥失败",ex);
         }
         return null;
     }
@@ -208,7 +209,7 @@ public class PKIUtils {
             byte[] result = cipher.doFinal(data);
             return result;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
-            log.error("解密数据失败",ex);
+            LOG.error("解密数据失败",ex);
         }
         return null;
     }
@@ -230,7 +231,7 @@ public class PKIUtils {
             byte[] result = decrypt(privateKey,data);
             return result;
         } catch (Exception ex) {
-            log.error("用证书的私钥解密失败",ex);
+            LOG.error("用证书的私钥解密失败",ex);
         }
         return null;
     }
@@ -249,7 +250,7 @@ public class PKIUtils {
             byte[] result = decrypt(key,data);
             return result;
         } catch (Exception ex) {
-            log.error("用证书的公钥解密失败",ex);
+            LOG.error("用证书的公钥解密失败",ex);
         }
         return null;
     }

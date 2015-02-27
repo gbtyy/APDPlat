@@ -28,22 +28,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apdplat.platform.log.APDPlatLogger;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  * md5算法工具
  * @author 杨尚川
  */
 public class MD5Util {
-    private static final Log log = LogFactory.getLog(MD5Util.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(MD5Util.class);
     static MessageDigest md = null;
 
     static {
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ne) {
-            log.error("NoSuchAlgorithmException: md5", ne);
+            LOG.error("NoSuchAlgorithmException: md5", ne);
         }
     }
 
@@ -64,10 +64,10 @@ public class MD5Util {
 
             return new String(Hex.encodeHex(md.digest()));
         } catch (FileNotFoundException e) {
-            log.error("md5 file " + f.getAbsolutePath() + " failed:" + e.getMessage());
+            LOG.error("md5 file " + f.getAbsolutePath() + " failed:" + e.getMessage());
             return null;
         } catch (IOException e) {
-            log.error("md5 file " + f.getAbsolutePath() + " failed:" + e.getMessage());
+            LOG.error("md5 file " + f.getAbsolutePath() + " failed:" + e.getMessage());
             return null;
         } finally {
             try {
@@ -75,7 +75,7 @@ public class MD5Util {
                     fis.close();
                 }
             } catch (IOException ex) {
-             log.error("文件操作失败",ex);
+             LOG.error("文件操作失败",ex);
             }
         }
     }

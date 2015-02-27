@@ -31,6 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  * 使用Filter来指定浏览器缓存或不缓存服务器数据
@@ -38,7 +39,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author 杨尚川
  */
 public class ResponseHeaderFilter implements javax.servlet.Filter {
-    protected static final APDPlatLogger log = new APDPlatLogger(DicService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(DicService.class);
 
     private  String expiresSeconds;
     private  FilterConfig filterConfig;
@@ -47,10 +48,10 @@ public class ResponseHeaderFilter implements javax.servlet.Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         this.filterConfig=filterConfig;
         expiresSeconds=filterConfig.getInitParameter("expiresSeconds");
-        log.info("初始化过滤器：ResponseHeaderFilter");
-        log.info("init filter：ResponseHeaderFilter", Locale.ENGLISH);
-        log.info("过期秒数："+expiresSeconds);
-        log.info("expires seconds："+expiresSeconds, Locale.ENGLISH);
+        LOG.info("初始化过滤器：ResponseHeaderFilter");
+        LOG.info("init filter：ResponseHeaderFilter", Locale.ENGLISH);
+        LOG.info("过期秒数："+expiresSeconds);
+        LOG.info("expires seconds："+expiresSeconds, Locale.ENGLISH);
     }
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -70,7 +71,7 @@ public class ResponseHeaderFilter implements javax.servlet.Filter {
 
     @Override
     public void destroy() {
-        log.info("销毁过滤器：ResponseHeaderFilter");
-        log.info("destroy filter：ResponseHeaderFilter", Locale.ENGLISH);
+        LOG.info("销毁过滤器：ResponseHeaderFilter");
+        LOG.info("destroy filter：ResponseHeaderFilter", Locale.ENGLISH);
     }
 }

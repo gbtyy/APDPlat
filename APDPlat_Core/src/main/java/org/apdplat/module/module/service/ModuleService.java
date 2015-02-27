@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import javax.annotation.Resource;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.stereotype.Service;
 /**
  * 模块服务
@@ -48,7 +49,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ModuleService {
-    protected static final APDPlatLogger log = new APDPlatLogger(ModuleService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(ModuleService.class);
     @Resource(name = "serviceFacade")
     private ServiceFacade serviceFacade;
 
@@ -62,7 +63,7 @@ public class ModuleService {
         if(roots!=null && roots.size()==1){
             return roots.get(0);
         }
-        log.error("有多个根模块!");
+        LOG.error("有多个根模块!");
         return null;
     }
 
@@ -87,7 +88,7 @@ public class ModuleService {
 
         List<Module> page = serviceFacade.query(Module.class, null, propertyCriteria).getModels();
         if (page.isEmpty()) {
-            log.error("没有找到ID等于" + id + "的模块");
+            LOG.error("没有找到ID等于" + id + "的模块");
             return null;
         }
         return page.get(0);
@@ -155,7 +156,7 @@ public class ModuleService {
     public String toRootJsonForEdit(){
         Module m=getRootModule();
         if(m==null){
-            log.error("获取根功能菜单失败！");
+            LOG.error("获取根功能菜单失败！");
             return "";
         }
         StringBuilder json=new StringBuilder();
@@ -214,7 +215,9 @@ public class ModuleService {
             for (Module m : subModules) {
                 json.append("{'text':'").append(m.getChinese()).append("','id':'module-").append(m.getId()).append("','iconCls':'").append(m.getEnglish()).append("'");
                 if (filter.recursion()) {
-                    json.append(",children:").append(toJson(m, filter));
+                    if(m.getSubModules().size()>0 || (filter.command() && m.getCommands().size()>0)){
+                        json.append(",children:").append(toJson(m, filter));
+                    }
                 }
                 if (m.getSubModules().size() > 0) {
                     json.append(",'leaf':false");
@@ -393,21 +396,21 @@ public class ModuleService {
         List<String> commons = new ArrayList<>();
         for (Method method : ExtJSSimpleAction.class.getMethods()) {
             commons.add(method.getName());
-            log.info("common method: " + method.getName());
+            LOG.info("common method: " + method.getName());
         }
         for (Command command : module.getCommands()) {
             String dependency = PropertyHolder.getProperty("command." + command.getEnglish());
             if (dependency != null && !"".equals(dependency.trim())) {
                 for (String c : dependency.split(",")) {
                     if (!commons.contains(c)) {
-                        log.info("被依赖的方法不存在，通常情况下，被依赖的方法应该是通用方法，应该存在");
-                        log.info("不存在通用方法: " + c);
+                        LOG.info("被依赖的方法不存在，通常情况下，被依赖的方法应该是通用方法，应该存在");
+                        LOG.info("不存在通用方法: " + c);
                     }
                 }
             } else {
                 if (!commons.contains(command.getEnglish())) {
                     special.add(command);
-                    log.info("special method:"+command.getEnglish());
+                    LOG.info("special method:"+command.getEnglish());
                 }
             }
         }
@@ -457,7 +460,7 @@ public class ModuleService {
         List<Module> leaf = new ArrayList<>(); 
         for(Module module : getAllModule(rootModule)){
             if(module.getCommands().isEmpty()){
-                log.info(module.getChinese()+" 模块不是叶子模块");
+                LOG.info(module.getChinese()+" 模块不是叶子模块");
             }else{
                 leaf.add(module);
             }

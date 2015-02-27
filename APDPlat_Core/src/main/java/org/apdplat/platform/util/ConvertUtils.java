@@ -21,18 +21,23 @@
 package org.apdplat.platform.util;
 
 import org.apdplat.platform.log.APDPlatLogger;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *
  * @author 杨尚川
  */
 public class ConvertUtils {
-    protected static final APDPlatLogger log = new APDPlatLogger(ConvertUtils.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(ConvertUtils.class);
 
     private ConvertUtils() {
     }
     
-    public static String getTimeDes(long ms) {
+    public static String getTimeDes(Long ms) {
+        //处理参数为NULL的情况
+        if(ms == null){
+            return "";
+        }
         int ss = 1000;
         int mi = ss * 60;
         int hh = mi * 60;

@@ -27,7 +27,6 @@ import org.apdplat.module.system.service.PropertyHolder;
 import org.apdplat.platform.log.APDPlatLogger;
 import org.apdplat.platform.util.SpringContextUtils;
 import java.io.IOException;
-import java.util.Collection;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -35,6 +34,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -43,7 +43,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author 杨尚川
  */
 public class AutoLoginFilter implements Filter {
-    protected static final APDPlatLogger log = new APDPlatLogger(AutoLoginFilter.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(AutoLoginFilter.class);
     
     private UserDetailsServiceImpl userDetailsServiceImpl;
     private boolean enabled = false;
@@ -60,9 +60,8 @@ public class AutoLoginFilter implements Filter {
                 UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(defaultUserName);
 
                 UserHolder.saveUserDetailsToContext(userDetails, (HttpServletRequest) request);
-                Collection<GrantedAuthority> auth=userDetails.getAuthorities();
-                for(GrantedAuthority au : auth){
-                    log.info("\t"+au.getAuthority());
+                for(GrantedAuthority au : userDetails.getAuthorities()){
+                    LOG.info("\t"+au.getAuthority());
                 }
             }
         }
@@ -72,18 +71,18 @@ public class AutoLoginFilter implements Filter {
 
     @Override
     public void init(FilterConfig fc) throws ServletException {
-        log.info("初始化自动登录过滤器(Initialize the automatic login filter)");
+        LOG.info("初始化自动登录过滤器(Initialize the automatic login filter)");
         enabled = !SpringSecurityService.isSecurity();
         defaultUserName = PropertyHolder.getProperty("auto.login.username");
         if(enabled){
-            log.info("启用自动登录过滤器(Enable automatic login filter)");
+            LOG.info("启用自动登录过滤器(Enable automatic login filter)");
         }else{            
-            log.info("禁用自动登录过滤器(Disable automatic login filter)");
+            LOG.info("禁用自动登录过滤器(Disable automatic login filter)");
         }
     }
 
     @Override
     public void destroy() {
-        log.info("销毁自动登录过滤器(Destroy the automatic login filter)");
+        LOG.info("销毁自动登录过滤器(Destroy the automatic login filter)");
     }
 }

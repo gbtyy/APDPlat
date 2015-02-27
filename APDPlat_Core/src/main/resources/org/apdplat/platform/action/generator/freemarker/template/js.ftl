@@ -204,7 +204,12 @@
                                                 xtype:'numberfield',
         </#if>
                                                 cls : 'attr',
+
+        <#if modelAttr.manyToOne>
+                                                name: 'model.${modelAttr.english}.id',
+        <#else>
                                                 name: 'model.${modelAttr.english}',
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}',
                                                 allowBlank: false,
                                                 blankText : '${modelAttr.chinese}不能为空'
@@ -267,7 +272,11 @@
                                                 xtype:'numberfield',
         </#if>
                                                 cls : 'attr',
+        <#if modelAttr.manyToOne>
+                                                name: 'model.${modelAttr.english}.id',
+        <#else>
                                                 name: 'model.${modelAttr.english}',
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}',
                                                 allowBlank: false,
                                                 blankText : '${modelAttr.chinese}不能为空'
@@ -357,8 +366,13 @@
                                                 xtype:'numberfield',
         </#if>
                                                 cls : 'attr',
+        <#if modelAttr.manyToOne>
+                                                name: 'model.${modelAttr.english}.id',
+                                                value: model.${modelAttr.english}_id,
+        <#else>
                                                 name: 'model.${modelAttr.english}',
                                                 value: model.${modelAttr.english},
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}',
                                                 allowBlank: false,
                                                 blankText : '${modelAttr.chinese}不能为空'
@@ -424,8 +438,13 @@
                                                 xtype:'numberfield',
         </#if>
                                                 cls : 'attr',
+        <#if modelAttr.manyToOne>
+                                                name: 'model.${modelAttr.english}.id',
+                                                value: model.${modelAttr.english}_id,
+        <#else>
                                                 name: 'model.${modelAttr.english}',
                                                 value: model.${modelAttr.english},
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}',
                                                 allowBlank: false,
                                                 blankText : '${modelAttr.chinese}不能为空'
@@ -449,6 +468,7 @@
                                                 editable:       false,
                                                 cls : 'attr',
                                                 hiddenName: 'model.${modelAttr.english}.id',
+                                                value: model.${modelAttr.english}Id,
                                                 fieldLabel: '${modelAttr.chinese}',
                                                 allowBlank: false,
                                                 blankText : '${modelAttr.chinese}不能为空'
@@ -479,6 +499,9 @@
             },
 
             show: function(model) {
+<#list dicNames as dicName>
+                ${dicName}Store.load();
+</#list>
                 <#if labelWidth gt 80>
                 ModifyBaseModel.getLabelWidth=function(){
                     return ${labelWidth};
@@ -511,7 +534,11 @@
                                    items: [
 <#list leftModelAttrs as modelAttr>
                                             {
+        <#if modelAttr.manyToOne && modelAttr.manyToOneRef != ''>
+                                                value: model.${modelAttr.english}_${modelAttr.manyToOneRef},
+        <#else>
                                                 value: model.${modelAttr.english},
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}'
     <#if modelAttr_has_next>
                                             },
@@ -533,7 +560,11 @@
                                   items: [
 <#list rightModelAttrs as modelAttr>
                                             {
+        <#if modelAttr.manyToOne && modelAttr.manyToOneRef != ''>
+                                                value: model.${modelAttr.english}_${modelAttr.manyToOneRef},
+        <#else>
                                                 value: model.${modelAttr.english},
+        </#if>
                                                 fieldLabel: '${modelAttr.chinese}'
     <#if modelAttr_has_next>
                                             },
@@ -568,9 +599,17 @@
                 var fields=[
 <#list attrs as attr>
     <#if attr_has_next>
+        <#if attr.manyToOne && attr.manyToOneRef != ''>
+ 				{name: '${attr.english}_${attr.manyToOneRef}'},
+        <#else>
  				{name: '${attr.english}'},
+        </#if>
     <#else>
+        <#if attr.manyToOne && attr.manyToOneRef != ''>
+ 				{name: '${attr.english}_${attr.manyToOneRef}'}
+        <#else>
  				{name: '${attr.english}'}
+        </#if>
     </#if>
 </#list>        
 			];
@@ -580,9 +619,17 @@
                 var columns=[
 <#list attrs as attr>
     <#if attr_has_next>
+        <#if attr.manyToOne && attr.manyToOneRef != ''>
+ 				{header: "${attr.chinese}", width: 20, dataIndex: '${attr.english}_${attr.manyToOneRef}', sortable: true},
+        <#else>
  				{header: "${attr.chinese}", width: 20, dataIndex: '${attr.english}', sortable: true},
+        </#if>
     <#else>
+        <#if attr.manyToOne && attr.manyToOneRef != ''>
+ 				{header: "${attr.chinese}", width: 20, dataIndex: '${attr.english}_${attr.manyToOneRef}', sortable: true}
+        <#else>
  				{header: "${attr.chinese}", width: 20, dataIndex: '${attr.english}', sortable: true}
+        </#if>
     </#if>
 </#list>        
                             ];

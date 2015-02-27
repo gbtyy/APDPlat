@@ -30,13 +30,14 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *
  * @author 杨尚川
  */
 public class FacadeFilter implements Filter {
-    protected static final APDPlatLogger log = new APDPlatLogger(FacadeFilter.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(FacadeFilter.class);
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -44,18 +45,18 @@ public class FacadeFilter implements Filter {
         if(modelName!=null){
             Model model = SpringContextUtils.getBean(modelName);
             request.setAttribute("model", model);
-            log.info("用户使用facade action,modelName="+modelName);
+            LOG.info("用户使用facade action,modelName="+modelName);
         }
         chain.doFilter(request, response);
     }
 
     @Override
     public void init(FilterConfig fc) throws ServletException {
-        log.info("初始化facade filter");
+        LOG.info("初始化facade filter");
     }
 
     @Override
     public void destroy() {
-        log.info("销毁facade filter");
+        LOG.info("销毁facade filter");
     }
 }

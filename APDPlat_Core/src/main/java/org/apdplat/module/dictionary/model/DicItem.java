@@ -23,12 +23,13 @@ package org.apdplat.module.dictionary.model;
 import org.apdplat.platform.annotation.ModelAttr;
 import org.apdplat.platform.annotation.ModelAttrRef;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableComponent;
 import org.compass.annotations.SearchableProperty;
@@ -46,7 +47,8 @@ import org.springframework.stereotype.Component;
 @XmlType(name = "DicItem")
 @Searchable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE) 
-public class DicItem extends Model {
+@Database
+public class DicItem extends SimpleModel {
 
     @ManyToOne
     @SearchableComponent

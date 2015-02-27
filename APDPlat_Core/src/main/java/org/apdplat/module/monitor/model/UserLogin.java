@@ -24,13 +24,15 @@ import org.apdplat.platform.generator.ActionGenerator;
 import org.apdplat.platform.annotation.IgnoreBusinessLog;
 import org.apdplat.platform.annotation.IgnoreUser;
 import org.apdplat.platform.annotation.ModelAttr;
-import org.apdplat.platform.model.Model;
 import org.apdplat.platform.util.ConvertUtils;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.Model;
+import org.compass.annotations.Index;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableProperty;
 import org.springframework.context.annotation.Scope;
@@ -48,6 +50,7 @@ import org.springframework.stereotype.Component;
 @Searchable
 @IgnoreBusinessLog
 @IgnoreUser
+@Database("log")
 public class UserLogin extends Model {
     public String getOnlineTimeStr(){
         return ConvertUtils.getTimeDes(onlineTime);
@@ -79,6 +82,20 @@ public class UserLogin extends Model {
     @ModelAttr("用户在线时间")
     protected Long onlineTime;
 
+    
+    //用户名不分词
+    @SearchableProperty(index=Index.NOT_ANALYZED)
+    @ModelAttr("用户名")
+    protected String username;    
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
     public Long getOnlineTime() {
         return onlineTime;
     }

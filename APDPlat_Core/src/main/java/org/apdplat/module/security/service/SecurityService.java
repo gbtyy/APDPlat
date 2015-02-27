@@ -28,24 +28,25 @@ import org.apdplat.platform.log.APDPlatLogger;
 import org.apdplat.platform.util.FileUtils;
 import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 
 public class SecurityService {
-    protected static final APDPlatLogger log = new APDPlatLogger(SecurityService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(SecurityService.class);
 
     public void checkSeq(String seq){
         if(StringUtils.isNotBlank(seq)){
-            log.debug("机器码为："+seq);
+            LOG.debug("机器码为："+seq);
             if(valide(seq)){
                 authSuccess();
-                log.debug("产品已经取得合法授权");
+                LOG.debug("产品已经取得合法授权");
             }else{
-                log.debug("产品没有取得授权");
+                LOG.debug("产品没有取得授权");
                 authFail(seq);
             }
         }else{
-            log.debug("机器码获取失败");
-            log.debug("产品没有取得授权");
+            LOG.debug("机器码获取失败");
+            LOG.debug("产品没有取得授权");
             authFail(seq);
         }
     }
@@ -97,7 +98,7 @@ public class SecurityService {
                 }
             }
         }catch(Exception e){
-            log.debug("安全检查出错",e);
+            LOG.debug("安全检查出错",e);
         }
         return false;
     }

@@ -20,6 +20,7 @@
 
 package org.apdplat.module.monitor.service;
 
+import java.util.ArrayList;
 import org.apdplat.module.monitor.model.RuningTime;
 import org.apdplat.platform.action.converter.DateTypeConverter;
 import org.apdplat.platform.log.APDPlatLogger;
@@ -28,15 +29,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *
  * @author 杨尚川
  */
 public class RuningTimeChartDataService {
-    protected static final APDPlatLogger log = new APDPlatLogger(RuningTimeChartDataService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(RuningTimeChartDataService.class);
     
     public static LinkedHashMap<String,Long> getRuningSequence(List<RuningTime> models){
+        models=getValidData(models);
         LinkedHashMap<String,Long> data=new LinkedHashMap<>();
         if(models.size()<1){
             return data;
@@ -68,6 +71,7 @@ public class RuningTimeChartDataService {
     }
     
     public static LinkedHashMap<String,Long> getRuningRateData(List<RuningTime> models){
+        models=getValidData(models);
         LinkedHashMap<String,Long> data=new LinkedHashMap<>();
         if(models.size()<1){
             return data;
@@ -84,21 +88,31 @@ public class RuningTimeChartDataService {
         });
         RuningTime first=models.get(0);
         RuningTime latest=models.get(models.size()-1);
-        log.debug("系统首次启动时间："+DateTypeConverter.toDefaultDateTime(first.getStartupTime()));
-        log.debug("系统最后关闭时间："+DateTypeConverter.toDefaultDateTime(latest.getShutdownTime()));
+        LOG.debug("系统首次启动时间："+DateTypeConverter.toDefaultDateTime(first.getStartupTime()));
+        LOG.debug("系统最后关闭时间："+DateTypeConverter.toDefaultDateTime(latest.getShutdownTime()));
         long totalTime=latest.getShutdownTime().getTime()-first.getStartupTime().getTime();
-        log.debug("系统总时间："+latest.getShutdownTime().getTime()+"-"+first.getStartupTime().getTime()+"="+totalTime);
+        LOG.debug("系统总时间："+latest.getShutdownTime().getTime()+"-"+first.getStartupTime().getTime()+"="+totalTime);
         long runingTime=0;
         for(RuningTime item : models){
-            log.debug("      增加系统运行时间："+item.getRuningTime());
+            LOG.debug("      增加系统运行时间："+item.getRuningTime());
             runingTime+=item.getRuningTime();
         }
-        log.debug("系统运行时间："+runingTime);
+        LOG.debug("系统运行时间："+runingTime);
         long stopTime=totalTime-runingTime;
-        log.debug("系统停机时间："+stopTime);
+        LOG.debug("系统停机时间："+stopTime);
         data.put("运行时间", runingTime);
         data.put("停机时间", -stopTime);
         
         return data;
+    }
+    public static List<RuningTime> getValidData(List<RuningTime> runingTimes){
+        List<RuningTime> models = new ArrayList<>();
+        for(RuningTime runingTime : runingTimes){            
+            //如果系统启动时间或是关闭时间有一项为空，则忽略
+            if(runingTime.getStartupTime() != null && runingTime.getShutdownTime() != null){
+                models.add(runingTime);
+            }
+        }
+        return models;
     }
 }

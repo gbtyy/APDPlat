@@ -26,7 +26,6 @@ import org.apdplat.platform.annotation.ModelAttr;
 import org.apdplat.platform.annotation.ModelAttrRef;
 import org.apdplat.platform.annotation.ModelCollRef;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import org.apdplat.platform.service.ServiceFacade;
 import org.apdplat.platform.util.SpringContextUtils;
 import java.util.ArrayList;
@@ -48,10 +47,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -64,7 +65,8 @@ uniqueConstraints = {
     @UniqueConstraint(columnNames = {"username"})})
 @XmlRootElement
 @XmlType(name = "User")
-public class User extends Model  implements UserDetails{
+@Database
+public class User extends SimpleModel  implements UserDetails{
     @ManyToOne
     @SearchableComponent(prefix="org_")
     @ModelAttr("组织架构")
@@ -122,7 +124,33 @@ public class User extends Model  implements UserDetails{
     protected boolean credentialsexpired = false;
     @ModelAttr("账户可用")
     protected boolean enabled = true;
-
+    
+    /**
+     * 用户登录验证
+     * 具体的验证规则就写在这里
+     * 
+     * @return 验证结果，null为验证通过，非null则为验证未通过的原因
+     */
+    public String loginValidate(){
+        String message = null;
+        if(!isEnabled()){
+            message = "用户账号被禁用";
+        }
+        if(!isAccountNonExpired()){
+            message = "用户帐号已过期";
+        }
+        if(!isAccountNonLocked()){
+            message = "用户帐号已被锁定";
+        }
+        if(!isCredentialsNonExpired()){
+            message = "用户凭证已过期";
+        }
+        if(getAuthorities() == null){
+            message = "用户帐号未被授予任何权限";
+        }
+        return message;
+    }
+    
     /**
      * 用户是否为超级管理员
      * @return
@@ -309,39 +337,39 @@ public class User extends Model  implements UserDetails{
     public Collection<GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> grantedAuthArray=new HashSet<>();
 
-        log.debug("user privilege:");
+        LOG.debug("user privilege:");
         //如果用户是超级管理员，则只需加入ROLE_SUPERMANAGER标识
         //就不用对其他的权限对象进行检查
         if(isSuperManager()){
-            grantedAuthArray.add(new GrantedAuthorityImpl("ROLE_SUPERMANAGER"));
-            log.debug("ROLE_SUPERMANAGER");
+            grantedAuthArray.add(new SimpleGrantedAuthority("ROLE_SUPERMANAGER"));
+            LOG.debug("ROLE_SUPERMANAGER");
         }else{
             if(this.roles != null && !this.roles.isEmpty()) {
-                log.debug("     roles:");
+                LOG.debug("     roles:");
                 for (Role role : this.roles) {
                     for (String priv : role.getAuthorities()) {
-                        log.debug(priv);
-                        grantedAuthArray.add(new GrantedAuthorityImpl(priv.toUpperCase()));
+                        LOG.debug(priv);
+                        grantedAuthArray.add(new SimpleGrantedAuthority(priv.toUpperCase()));
                     }
                 }
             }
             if(this.userGroups != null && !this.userGroups.isEmpty()){
-                log.debug("     userGroups:");
+                LOG.debug("     userGroups:");
                 for(UserGroup userGroup : this.userGroups){
                     for(Role role : userGroup.getRoles()){
                         for (String priv : role.getAuthorities()) {
-                            log.debug(priv);
-                            grantedAuthArray.add(new GrantedAuthorityImpl(priv.toUpperCase()));
+                            LOG.debug(priv);
+                            grantedAuthArray.add(new SimpleGrantedAuthority(priv.toUpperCase()));
                         }
                     }
                 }
             }        
             if(this.positions != null && !this.positions.isEmpty()) {
-                log.debug("     positions:");
+                LOG.debug("     positions:");
                 for (Position position : this.positions) {
                     for (String priv : position.getAuthorities()) {
-                        log.debug(priv);
-                        grantedAuthArray.add(new GrantedAuthorityImpl(priv.toUpperCase()));
+                        LOG.debug(priv);
+                        grantedAuthArray.add(new SimpleGrantedAuthority(priv.toUpperCase()));
                     }
                 }
             }
@@ -349,8 +377,8 @@ public class User extends Model  implements UserDetails{
         if(grantedAuthArray.isEmpty()){
             return null;
         }
-        grantedAuthArray.add(new GrantedAuthorityImpl("ROLE_MANAGER"));
-        log.debug("ROLE_MANAGER");
+        grantedAuthArray.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
+        LOG.debug("ROLE_MANAGER");
         return grantedAuthArray;
     }
 

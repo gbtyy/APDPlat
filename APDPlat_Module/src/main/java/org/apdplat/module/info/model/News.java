@@ -24,7 +24,6 @@ import org.apdplat.platform.annotation.ModelAttr;
 import org.apdplat.platform.annotation.ModelAttrRef;
 import org.apdplat.platform.annotation.RenderIgnore;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -33,6 +32,8 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableComponent;
 import org.springframework.context.annotation.Scope;
@@ -42,7 +43,8 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @Searchable
-public class News extends Model{
+@Database
+public class News extends SimpleModel{
     @Transient
     @ModelAttr("语言")
     protected String lang="zh";
@@ -80,8 +82,8 @@ public class News extends Model{
     }
     //setTitle方法依赖于setLang方法先执行
     public void setTitle(String title){
-        log.info("设置标题");
-        log.info("模型语言："+lang);
+        LOG.info("设置标题");
+        LOG.info("模型语言："+lang);
         NewsContent newsContent = getNewsContent();
         newsContent.setTitle(title);
     }
@@ -96,8 +98,8 @@ public class News extends Model{
     }
     //setContent方法依赖于setLang方法先执行
     public void setContent(String content){
-        log.info("设置内容");
-        log.info("模型语言："+lang);
+        LOG.info("设置内容");
+        LOG.info("模型语言："+lang);
         NewsContent newsContent = getNewsContent();
         newsContent.setContent(content);
     }

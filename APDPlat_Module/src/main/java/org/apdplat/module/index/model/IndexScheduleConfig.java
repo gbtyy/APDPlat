@@ -21,8 +21,10 @@
 package org.apdplat.module.index.model;
 
 import org.apdplat.platform.annotation.IgnoreBusinessLog;
-import org.apdplat.platform.model.Model;
 import javax.persistence.Entity;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.annotation.ModelAttr;
+import org.apdplat.platform.model.SimpleModel;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +32,13 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @IgnoreBusinessLog
-public class IndexScheduleConfig extends Model{
+@Database
+public class IndexScheduleConfig extends SimpleModel{
+    @ModelAttr("定时重建索引的小时（0-23）")
     protected int scheduleHour=2;
+    @ModelAttr("定时重建索引的分钟（0-59）")
     protected int scheduleMinute=2;
+    @ModelAttr("是否启用定时索引")
     protected boolean enabled=true;
 
     public int getScheduleHour() {

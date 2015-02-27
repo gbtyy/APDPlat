@@ -25,7 +25,6 @@ import org.apdplat.module.module.model.Module;
 import org.apdplat.module.module.service.ModuleService;
 import org.apdplat.platform.annotation.*;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,6 +38,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -49,7 +49,8 @@ import org.springframework.stereotype.Component;
 @Searchable
 @XmlRootElement
 @XmlType(name = "Position")
-public class Position extends Model{
+@Database
+public class Position extends SimpleModel{
 
     @SearchableProperty
     @ModelAttr("岗位名称")
@@ -76,6 +77,8 @@ public class Position extends Model{
     @JoinColumn(name = "positionID")}, inverseJoinColumns = {
     @JoinColumn(name = "commandID")})
     @OrderBy("id")
+    @ModelAttr("岗位拥有的命令列表")
+    @ModelCollRef("chinese")
     protected List<Command> commands = new ArrayList<>();
     
     @ManyToMany(cascade = CascadeType.REFRESH, mappedBy = "positions", fetch = FetchType.LAZY)

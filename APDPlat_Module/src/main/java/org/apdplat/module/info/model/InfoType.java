@@ -23,7 +23,6 @@ package org.apdplat.module.info.model;
 import org.apdplat.platform.annotation.ModelAttr;
 import org.apdplat.platform.annotation.RenderIgnore;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -39,6 +38,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableComponent;
 import org.springframework.context.annotation.Scope;
@@ -50,7 +51,8 @@ import org.springframework.stereotype.Component;
 @XmlRootElement
 @XmlType(name = "InfoType")
 @Searchable
-public class InfoType extends Model{
+@Database
+public class InfoType extends SimpleModel{
     
     @Transient
     @ModelAttr("语言")
@@ -96,8 +98,8 @@ public class InfoType extends Model{
     }
     //setInfoTypeName方法依赖于setLang方法先执行
     public void setInfoTypeName(String infoTypeName){
-        log.info("设置新闻类别名称");
-        log.info("模型语言："+lang);
+        LOG.info("设置新闻类别名称");
+        LOG.info("模型语言："+lang);
         InfoTypeContent infoTypeContent = getInfoTypeContent();
         infoTypeContent.setInfoTypeName(infoTypeName);
     }

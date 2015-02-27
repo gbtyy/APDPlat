@@ -21,7 +21,7 @@
 package ${modelInfo.modelPackage};
 
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
+import org.apdplat.platform.model.SimpleModel;
 import org.apdplat.platform.annotation.*;
 <#if modelInfo.hasDicItem>
 import org.apdplat.module.dictionary.model.DicItem;
@@ -51,7 +51,7 @@ import javax.xml.bind.annotation.XmlType;
 @Searchable
 @XmlRootElement
 @XmlType(name = "${modelInfo.modelEnglish}")
-public class ${modelInfo.modelEnglish} extends Model{
+public class ${modelInfo.modelEnglish} extends SimpleModel{
 
 <#list modelInfo.attrs as attr>
     <#if attr.renderIgnore>
@@ -62,6 +62,9 @@ public class ${modelInfo.modelEnglish} extends Model{
     @SearchableProperty
         </#if>
     @ModelAttr("${attr.des}")
+        <#if attr.type == 'String' && attr.length gt 0>
+    @Column(length=${attr.length})
+        </#if>
     protected ${attr.type} ${attr.name};
     </#if>
     <#if attr.dic == 'SimpleDic' || attr.dic == 'TreeDic'>
@@ -70,7 +73,7 @@ public class ${modelInfo.modelEnglish} extends Model{
     @SearchableComponent(prefix="${attr.name}_")
         </#if>
     @ModelAttr("${attr.des}")
-    @${attr.dic}("${attr.name}")
+    @${attr.dic}("${attr.dicName}")
     protected ${attr.type} ${attr.name};
     </#if>
     <#if attr.type == 'Date' || attr.type == 'Time'>
@@ -79,6 +82,12 @@ public class ${modelInfo.modelEnglish} extends Model{
         </#if>
         <#if attr.searchable && attr.type == 'Time'>
     @SearchableProperty(format = "yyyy-MM-dd_HH:mm:ss")
+        </#if>
+        <#if attr.type == 'Date'>
+    @RenderDate
+        </#if>
+        <#if attr.type == 'Time'>
+    @RenderTime
         </#if>
     @Temporal(TemporalType.TIMESTAMP)
     @ModelAttr("${attr.des}")

@@ -31,6 +31,7 @@ import org.apdplat.platform.result.Page;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Resource;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 /**
@@ -40,14 +41,29 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public  class ServiceFacade{
-        protected final APDPlatLogger log = new APDPlatLogger(getClass());
+        protected final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(getClass());   
     
 	@Resource(name="daoFacade")
-	private DaoFacade dao = null;
+	private DaoFacade dao = null;     
+
+        public void setDao(DaoFacade dao) {
+            this.dao = dao;
+        }
 
         public void clear(){
             dao.clear();
         }
+        /**
+         * 批量保存，批量提交，显著提升性能
+         * @param <T>
+         * @param models 
+         */
+	@Transactional
+	public <T extends Model> void create(List<T> models) {
+            for(T model : models){
+		dao.create(model);
+            }
+	}
 
 	@Transactional
 	public <T extends Model> void create(T model) {
@@ -85,7 +101,7 @@ public  class ServiceFacade{
 				this.delete(modelClass,modelId);
                                 ids.add(modelId);
 			}catch(Exception e){
-				log.error("删除模型出错",e);
+				LOG.error("删除模型出错",e);
 			}
 		}
                 return ids;

@@ -28,7 +28,6 @@ import org.apdplat.platform.annotation.ModelAttrRef;
 import org.apdplat.platform.annotation.ModelCollRef;
 import org.apdplat.platform.annotation.RenderIgnore;
 import org.apdplat.platform.generator.ActionGenerator;
-import org.apdplat.platform.model.Model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -53,6 +52,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import org.apdplat.platform.annotation.Database;
+import org.apdplat.platform.model.SimpleModel;
 import org.compass.annotations.SearchableComponent;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,8 @@ uniqueConstraints = {
     @UniqueConstraint(columnNames = {"roleName"})})
 @XmlRootElement
 @XmlType(name = "Role")
-public class Role extends Model {
+@Database
+public class Role extends SimpleModel {
     @Column(length=40)
     @ModelAttr("角色名")
     protected String roleName;
@@ -98,6 +100,8 @@ public class Role extends Model {
     @JoinColumn(name = "roleID")}, inverseJoinColumns = {
     @JoinColumn(name = "commandID")})
     @OrderBy("id")
+    @ModelAttr("角色拥有的命令列表")
+    @ModelCollRef("chinese")
     protected List<Command> commands = new ArrayList<>();
     public String getModuleCommandStr(){
         if(this.commands==null || this.commands.isEmpty()){

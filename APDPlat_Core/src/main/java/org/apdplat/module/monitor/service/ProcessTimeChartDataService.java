@@ -31,13 +31,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 
 /**
  *
  * @author 杨尚川
  */
 public class ProcessTimeChartDataService {
-    protected static final APDPlatLogger log = new APDPlatLogger(ProcessTimeChartDataService.class);
+    private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(ProcessTimeChartDataService.class);
   
 
     public static LinkedHashMap<String, Long> getProcessRate(List<ProcessTime> models) {    
@@ -57,18 +58,18 @@ public class ProcessTimeChartDataService {
         }
         ProcessTime first=models.get(0);
         ProcessTime latest=models.get(models.size()-1);
-        log.debug("首次请求时间："+DateTypeConverter.toDefaultDateTime(first.getStartTime()));
-        log.debug("最后请求时间："+DateTypeConverter.toDefaultDateTime(latest.getEndTime()));
+        LOG.debug("首次请求时间："+DateTypeConverter.toDefaultDateTime(first.getStartTime()));
+        LOG.debug("最后请求时间："+DateTypeConverter.toDefaultDateTime(latest.getEndTime()));
         long totalTime=latest.getEndTime().getTime()-first.getStartTime().getTime();
-        log.debug("系统总时间："+latest.getEndTime().getTime()+"-"+first.getStartTime().getTime()+"="+totalTime);
+        LOG.debug("系统总时间："+latest.getEndTime().getTime()+"-"+first.getStartTime().getTime()+"="+totalTime);
         long processTime=0;
         for(ProcessTime item : models){
-            log.debug("      增加请求处理时间："+item.getProcessTime());
+            LOG.debug("      增加请求处理时间："+item.getProcessTime());
             processTime+=item.getProcessTime();
         }
-        log.debug("处理请求时间："+processTime);
+        LOG.debug("处理请求时间："+processTime);
         long waitTime=totalTime-processTime;
-        log.debug("系统空闲时间："+waitTime);
+        LOG.debug("系统空闲时间："+waitTime);
         data.put("处理请求时间", processTime);
         data.put("系统空闲时间", -waitTime);
         
@@ -106,10 +107,9 @@ public class ProcessTimeChartDataService {
         LinkedHashMap<String,Long> temp=new LinkedHashMap<>();
         //将日志数据转换为统计报表数据
         for(ProcessTime item : models){
-            User user=item.getOwnerUser();
-            String username="匿名用户";
-            if(user!=null){
-                username=user.getUsername();
+            String username=item.getUsername();
+            if(username == null){
+                username = "匿名用户";
             }
             
             Long value=temp.get(username);

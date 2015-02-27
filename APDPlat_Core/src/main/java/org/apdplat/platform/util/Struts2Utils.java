@@ -32,12 +32,13 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts2.ServletActionContext;
+import org.apdplat.platform.log.APDPlatLoggerFactory;
 /**
 *Struts2工具类
 * @author 杨尚川
 */
 public class Struts2Utils {
-        protected static final APDPlatLogger log = new APDPlatLogger(Struts2Utils.class);
+        private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(Struts2Utils.class);
         
         private Struts2Utils(){};
 
@@ -102,7 +103,7 @@ public class Struts2Utils {
 			response.getWriter().flush();
 
 		} catch (IOException e) {
-			log.error(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 		}
 	}
 
@@ -193,7 +194,7 @@ public class Struts2Utils {
                     out.flush();
                 }
             } catch (IOException e) {
-                log.error("渲染图像失败",e);
+                LOG.error("渲染图像失败",e);
             }
         }
 

@@ -30,8 +30,10 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.Entity;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -52,7 +54,7 @@ public class JsGenerator  extends Generator{
         try {
             freemarkerConfiguration = factory.createConfiguration();
         } catch (IOException | TemplateException e) {
-            log.error("初始化模板错误",e);
+            LOG.error("初始化模板错误",e);
         }
 
         try {
@@ -91,12 +93,12 @@ public class JsGenerator  extends Generator{
                             System.out.println(clazz);
                         }
                     } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-                        log.error("生成JS错误",e);
+                        LOG.error("生成JS错误",e);
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("生成JS错误",e);
+            LOG.error("生成JS错误",e);
         }
         
     }
@@ -114,10 +116,20 @@ public class JsGenerator  extends Generator{
         
         String templateName="js.ftl";
 
-        log.info("开始生成JS");
+        LOG.info("开始生成JS");
         
         Map<String, Object> context = new HashMap<>();
-        List<ModelFieldData> attrs=model.getAllModelAttr();
+        List<ModelFieldData> attrs=model.getAllRenderModelAttr();
+        //去除重复的词典，便于在修改页面加载各个不同的下拉菜单
+        Set<String> dicNames=new HashSet<String>();
+        for(ModelFieldData attr : attrs){
+            if(!"".equals(attr.getSimpleDic())){
+                dicNames.add(attr.getSimpleDic());
+            }
+            if(!"".equals(attr.getTreeDic())){
+                dicNames.add(attr.getTreeDic());
+            }
+        }
         
         int baseHeight=120;
         //添加，分为两列
@@ -183,6 +195,7 @@ public class JsGenerator  extends Generator{
         context.put("namespace", modulePath);
         context.put("action", dealWithAcdtion(module));
         context.put("attrs", attrs);
+        context.put("dicNames", dicNames);
         context.put("labelWidth", labelWidth);
         context.put("createWidth", createWidth.toString());
         context.put("createHeight", createHeight);
@@ -201,12 +214,12 @@ public class JsGenerator  extends Generator{
         try {
             Template template = freemarkerConfiguration.getTemplate(templateName, ENCODING);
             String content = FreeMarkerTemplateUtils.processTemplateIntoString(template, context);
-            log.info("生成JS成功");
+            LOG.info("生成JS成功");
             return content;
         } catch (IOException | TemplateException e) {
-            log.error("生成JS错误",e);
+            LOG.error("生成JS错误",e);
         }
-        log.info("生成JS失败");
+        LOG.info("生成JS失败");
         return "";
     }
     /**
